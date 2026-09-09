@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: raw
+    database: ferryflow-508014   # το GCP project id σου
+    schema: raw
+    tables:
+      - name: routes
+      - name: operators
+      - name: customers
+      - name: searches
+      - name: bookings
+      - name: payments
