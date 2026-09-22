@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: fct_bookings
-    description: "One row per booking (deduped). Central fact of the star schema."
+    description: "One row per booking (deduped on booking_id). Central fact table of the FerryFlow star schema. Revenue is recognized only for confirmed bookings; payments are pre-aggregated to one row per booking to protect the grain."
     columns:
       - name: booking_id
         description: "Primary key — one row per booking."
@@ -10,6 +10,7 @@ models:
           - unique
           - not_null
       - name: route_id
+        description: "FK to dim_route."
         data_tests:
           - not_null
           - relationships:
@@ -17,34 +18,54 @@ models:
                 to: ref('dim_route')
                 field: route_id
       - name: operator_id
+        description: "FK to dim_operator."
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_operator')
                 field: operator_id
       - name: customer_id
+        description: "FK to dim_customer."
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_customer')
                 field: customer_id
+      - name: revenue_eur
+        description: "Booking amount in EUR, but only for confirmed bookings; 0 for cancelled/refunded."
       - name: booking_status
+        description: "Normalized status: confirmed, cancelled, or refunded."
         data_tests:
           - accepted_values:
               arguments:
                 values: ['confirmed', 'cancelled', 'refunded']
 
+  - name: mart_conversion_funnel
+    description: "Search-to-booking conversion funnel, one row per region × month. Deep-link bookings (no prior search) are intentionally excluded so the conversion rate reflects only journeys that started with a search."
+    columns:
+      - name: region
+        description: "Sea/basin of the route (e.g. Aegean, Baltic)."
+      - name: search_month
+        description: "Month of the search, truncated to the first day."
+      - name: search_to_booking_pct
+        description: "Bookings / searches × 100."
+      - name: revenue_eur
+        description: "Confirmed revenue attributed to searches in this region-month."
+
   - name: dim_route
+    description: "Route dimension — one row per route with origin/destination ports, countries, distance and region."
     columns:
       - name: route_id
         data_tests: [unique, not_null]
 
   - name: dim_operator
+    description: "Ferry operator dimension."
     columns:
       - name: operator_id
         data_tests: [unique, not_null]
 
   - name: dim_customer
+    description: "Customer dimension with country, first-seen date and acquisition channel."
     columns:
       - name: customer_id
         data_tests: [unique, not_null]
