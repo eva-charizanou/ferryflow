@@ -21,7 +21,7 @@ renamed as (
         booking_ts,
         travel_date,
         amount_cents,
-        round(amount_cents / 100.0, 2) as amount_eur,
+        {{ cents_to_euros('amount_cents') }} as amount_eur,
         currency,
         lower(status)                  as booking_status
     from deduped

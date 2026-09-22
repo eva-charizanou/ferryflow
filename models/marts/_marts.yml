@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: fct_bookings
+    description: "One row per booking (deduped). Central fact of the star schema."
+    columns:
+      - name: booking_id
+        description: "Primary key — one row per booking."
+        data_tests:
+          - unique
+          - not_null
+      - name: route_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_route')
+                field: route_id
+      - name: operator_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_operator')
+                field: operator_id
+      - name: customer_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_id
+      - name: booking_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['confirmed', 'cancelled', 'refunded']
+
+  - name: dim_route
+    columns:
+      - name: route_id
+        data_tests: [unique, not_null]
+
+  - name: dim_operator
+    columns:
+      - name: operator_id
+        data_tests: [unique, not_null]
+
+  - name: dim_customer
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
